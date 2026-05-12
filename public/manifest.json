@@ -1,6 +1,6 @@
 {
-  "name": "panofit - 一键跨屏拼图",
-  "short_name": "panofit",
+  "name": "Panofit - 一键跨屏拼图",
+  "short_name": "Panofit",
   "description": "智能拼贴 · 一键跨屏拼图",
   "start_url": "./",
   "display": "standalone",

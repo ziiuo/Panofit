@@ -11,3 +11,5 @@ __pycache__/
 .claude/
 .mcp.json
 .claude/
+
+# .github workflow is committed

@@ -57,6 +57,7 @@ export default function EditorPage() {
   const lastPinchScale = useRef(1);
   const draggingRef = useRef<{ id: string; cellIdx: number; startX: number; startY: number; startOx: number; startOy: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const draggingId = useRef<string | null>(null);
 
   const n = cellCanvases.length;
   const currentBg = cellBackgrounds[0] ?? '#000000';
@@ -228,6 +229,7 @@ export default function EditorPage() {
     const startOx = ov.x, startOy = ov.y;
 
     const onMove = (me: MouseEvent | TouchEvent) => {
+      if ('touches' in me && me.cancelable) me.preventDefault();
       let mx: number, my: number;
       if ('touches' in me) { mx = me.touches[0].clientX; my = me.touches[0].clientY; }
       else { mx = me.clientX; my = me.clientY; }
@@ -235,9 +237,7 @@ export default function EditorPage() {
       const img = imgs[cellIdx] as HTMLImageElement;
       if (!img) return;
       const rect = img.getBoundingClientRect();
-      const dx = (mx - cx) / rect.width;
-      const dy = (my - cy) / rect.height;
-      updateTextOverlay(cellIdx, ovId, { x: startOx + dx, y: startOy + dy });
+      updateTextOverlay(cellIdx, ovId, { x: startOx + (mx - cx) / rect.width, y: startOy + (my - cy) / rect.height });
     };
 
     const onUp = () => {
@@ -249,8 +249,8 @@ export default function EditorPage() {
 
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
-    window.addEventListener('touchmove', onMove);
-    window.addEventListener('touchend', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp, { passive: false });
   }, [cellTextOverlays, updateTextOverlay]);
 
   if (n === 0) {
@@ -262,7 +262,7 @@ export default function EditorPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 bg-[#1a1a1a]">
+      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 bg-[#1a1a1a] safe-top">
         <button onClick={() => setShowBackConfirm(true)} className="text-text text-sm font-medium glass-btn active:scale-95">← 返回</button>
         <div className="flex items-center gap-2">
           <button onClick={() => setPage('preview')} className="text-text text-sm font-medium glass-btn active:scale-95">预览</button>
@@ -279,7 +279,7 @@ export default function EditorPage() {
         onTouchEnd={onTouchEnd}
         onWheel={onWheel}
       >
-        <div className="flex items-center gap-0 px-[50vw] py-6" style={{ transform: `scale(${transform.scale})`, transformOrigin: 'center center' }}>
+        <div className="flex items-center gap-0 px-[50vw] py-6" style={{ transform: `scale(${transform.scale})`, transformOrigin: 'center center' }} onClick={() => { setEditingTextId(null); setTextPanelMode(null); }}>
           {displayUrls.map((url, i) => (
             <div
               key={i}
@@ -303,15 +303,15 @@ export default function EditorPage() {
               const cellW = cellImg?.offsetWidth ?? 358;
               const cellH = cellImg?.offsetHeight ?? 358;
               return (
-                <div key={ov.id} className="absolute group pointer-events-auto" style={{ left: `${cellLeft + ov.x * cellW}px`, top: `${cellTop + ov.y * cellH}px`, textAlign: ov.textAlign }}>
+                <div key={ov.id} data-ov-id={ov.id} className="absolute group pointer-events-auto" style={{ left: `${cellLeft + ov.x * cellW}px`, top: `${cellTop + ov.y * cellH}px`, textAlign: ov.textAlign }}>
                   <div className="inline-block cursor-grab active:cursor-grabbing"
                     onMouseDown={(e) => handleDragStart(e, ov.id, i)}
                     onTouchStart={(e) => { if (e.touches.length === 1) handleDragStart(e, ov.id, i); }}
                     onClick={(e2) => { e2.stopPropagation(); selectOverlay(ov.id, i); }}>
                     {ov.text.trim() ? (
-                      <span style={{ fontFamily: ov.fontFamily, fontSize: `${ov.fontSize}px`, color: ov.color, fontWeight: ov.fontWeight, fontStyle: ov.fontStyle, whiteSpace: 'nowrap', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{ov.text}</span>
+                      <span style={{ fontFamily: ov.fontFamily, fontSize: `${ov.fontSize}px`, color: ov.color, fontWeight: ov.fontWeight, fontStyle: ov.fontStyle, whiteSpace: 'pre', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{ov.text}</span>
                     ) : (
-                      <span className="text-white/60 text-xs bg-white/10 rounded px-1.5 py-0.5">点击输入文字</span>
+                      <span className="text-white/60 text-xs bg-white/10 rounded px-1.5 py-0.5 whitespace-nowrap">点击输入文字</span>
                     )}
                   </div>
                   <button onClick={(e2) => { e2.stopPropagation(); removeTextOverlay(i, ov.id); if (editingTextId === ov.id) setEditingTextId(null); }}

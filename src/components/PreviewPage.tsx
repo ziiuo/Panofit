@@ -69,7 +69,7 @@ export default function PreviewPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 bg-[#1a1a1a]">
+      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 bg-[#1a1a1a] safe-top">
         <button onClick={() => setPage('editor')} className="text-text text-sm font-medium glass-btn active:scale-95">← 返回</button>
         <h1 className="text-base font-semibold text-text">预览</h1>
         <button onClick={handleExport} className="text-text text-sm font-medium glass-btn active:scale-95">下载</button>

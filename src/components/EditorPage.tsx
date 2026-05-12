@@ -12,9 +12,9 @@ const BG_COLORS = [
 
 const FONT_OPTIONS = [
   'PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif',
-  'Heiti SC, STHeiti, Noto Sans CJK SC, sans-serif',
-  'Songti SC, STSong, Noto Serif CJK SC, SimSun, serif',
-  'Kaiti SC, STKaiti, KaiTi, serif',
+  'STHeiti, Heiti SC, Noto Sans CJK SC, sans-serif',
+  'STSong, Songti SC, SimSun, Noto Serif CJK SC, serif',
+  'STKaiti, Kaiti SC, KaiTi, serif',
   'Arial, Helvetica, sans-serif',
   'Georgia, Times New Roman, serif',
 ];

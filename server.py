@@ -159,7 +159,11 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         if path == "/": path = "/index.html"
         if path == "/health":
-            self._json({"status": "ok", "yolo": _use_yolo})
+            self._json({
+                "status": "ok",
+                "yolo": _use_yolo,
+                "feishu": bool(FEISHU_APP_ID and FEISHU_APP_SECRET and FEISHU_APP_TOKEN and FEISHU_TABLE_ID)
+            })
             return
         filepath = os.path.join(STATIC_DIR, path.lstrip("/"))
         if os.path.isfile(filepath):

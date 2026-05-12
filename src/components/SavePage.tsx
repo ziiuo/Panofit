@@ -32,7 +32,7 @@ export default function SavePage() {
   return (
     <div className="h-full flex flex-col">
       {/* Top bar */}
-      <div className="flex items-center justify-center px-4 py-3 flex-shrink-0 bg-[#1a1a1a] relative">
+      <div className="flex items-center justify-center px-4 py-3 flex-shrink-0 bg-[#1a1a1a] safe-top relative">
         <button onClick={() => setPage('editor')} className="absolute left-4 text-text text-sm font-medium glass-btn active:scale-95">← 返回</button>
         <span className="text-sm font-medium text-text">保存拼图</span>
       </div>

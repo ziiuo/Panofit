@@ -154,7 +154,7 @@ export default function UploadPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-4 pt-3 pb-3 flex items-center justify-between glass-bar">
+      <div className="px-4 pt-3 pb-3 flex items-center justify-between glass-bar safe-top">
         <button onClick={() => useAppStore.getState().reset()} className="text-sm text-text-secondary glass-btn active:scale-95">取消</button>
         <h1 className="text-base font-semibold text-text">上传素材</h1>
         <button onClick={handleAddMore} disabled={uploadedImages.length >= 24} className={`text-sm font-medium glass-btn active:scale-95 ${uploadedImages.length >= 24 ? 'opacity-30 cursor-not-allowed' : 'text-text'}`}>+ 添加</button>
@@ -173,8 +173,10 @@ export default function UploadPage() {
                   <div className="aspect-square rounded-lg overflow-hidden bg-border">
                     <img src={img.objectUrl} alt={`${i + 1}`} className="w-full h-full object-cover" draggable={false} />
                   </div>
-                  <button onClick={() => removeImage(i)}
-                    className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/50 text-white flex items-center justify-center text-[10px]">✕</button>
+                  {!generating && (
+                    <button onClick={() => removeImage(i)}
+                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/50 text-white flex items-center justify-center text-[10px]">✕</button>
+                  )}
                 </div>
               ))}
             </div>

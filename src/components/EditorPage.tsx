@@ -436,15 +436,14 @@ export default function EditorPage() {
           <button
             onClick={() => !bgLocked && (showBgPicker ? setShowBgPicker(false) : openBgPicker())}
             disabled={bgLocked}
-            className={`text-xs font-medium px-3 py-2 rounded-lg transition-all ${bgLocked ? 'opacity-40 cursor-not-allowed text-text-secondary' : showBgPicker ? 'bg-primary/10 text-primary' : 'text-text-secondary hover:bg-gray-50 active:bg-gray-100'}`}
+            className={`text-xs font-medium px-3 py-2 rounded-lg transition-all min-w-[56px] ${bgLocked ? 'opacity-40 cursor-not-allowed text-text-secondary' : showBgPicker ? 'bg-primary/10 text-primary' : 'text-text-secondary hover:bg-gray-50 active:bg-gray-100'}`}
           >{bgLocked ? '已锁定' : '背景'}</button>
           <button
             onClick={() => textPanelMode ? (setTextPanelMode(null), setEditingTextId(null)) : openTextMain()}
-            className={`text-xs font-medium px-3 py-2 rounded-lg transition-all ${textPanelMode ? 'bg-primary/10 text-primary' : 'text-text-secondary hover:bg-gray-50 active:bg-gray-100'}`}
+            className={`text-xs font-medium px-3 py-2 rounded-lg transition-all min-w-[56px] ${textPanelMode ? 'bg-primary/10 text-primary' : 'text-text-secondary hover:bg-gray-50 active:bg-gray-100'}`}
           >文字</button>
         </div>
 
-        <div className="h-4 sm:h-2" />
       </div>
 
       {/* Back confirm modal */}

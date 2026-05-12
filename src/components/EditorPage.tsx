@@ -114,6 +114,7 @@ export default function EditorPage() {
 
   // Pinch zoom
   const onTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && e.cancelable) e.preventDefault();
     if (e.touches.length === 2) {
       pinching.current = true;
       const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -273,7 +274,7 @@ export default function EditorPage() {
       {/* Infinite canvas — horizontal strip */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-x-auto overflow-y-hidden bg-[#1a1a1a] select-none flex items-center"
+        className={`flex-1 bg-[#1a1a1a] select-none flex items-center ${editingTextId ? 'overflow-hidden' : 'overflow-x-auto overflow-y-hidden'}`}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}

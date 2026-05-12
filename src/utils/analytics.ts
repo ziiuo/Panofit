@@ -1,4 +1,5 @@
-const TRACK_URL = 'http://localhost:8766/track';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+const TRACK_URL = `${API_URL}/track`;
 
 const sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const pageEnterTimes: Record<string, number> = {};

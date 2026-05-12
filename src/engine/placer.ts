@@ -19,7 +19,7 @@ function computeFaceOnCanvas(idx: number, px: number, py: number, pw: number, ph
   return { fx: px + (fsx - sx) / sw * pw, fy: py + (fsy - sy) / sh * ph };
 }
 function isFaceOnCutLine(idx: number, slot: { x: number; y: number; w: number; h: number }, cw: number, ch: number, images: UploadedImage[], analyses: (ImageAnalysis | null)[]): boolean {
-  let fr = analyses[idx]?.faceRegion; if (!fr) { const r = images[idx].naturalWidth / images[idx].naturalHeight; if (r < 1) fr = { cx: 0.5, cy: 0.5, r: 0.18 }; }
+  const fr = analyses[idx]?.faceRegion;
   if (!fr || !cw) return false;
   const px = slot.x * cw, py = slot.y * ch, pw = slot.w * cw, ph = slot.h * ch;
   const pos = computeFaceOnCanvas(idx, px, py, pw, ph, images, analyses); if (!pos) return true;
@@ -79,8 +79,7 @@ export function placeImages(canvasW: number, canvasH: number, images: UploadedIm
   function doLayout(slots: { x: number; y: number; w: number; h: number }[], zMap?: ((si: number) => number), prefNoFace?: boolean[], name?: string, noShiftSlots?: Set<number>) {
     debug.push(`  faces: ${soloIndices.map(i => { const fr = analyses[i]?.faceRegion; const r = images[i].naturalWidth / images[i].naturalHeight; const fb = !fr && r < 1; return `#${i}:${!!fr}${fr?`(${fr.cx.toFixed(1)},${fr.cy.toFixed(1)})`:fb?'(fb)':''}`; }).join(' ')}`);
     let a = assignSlots(slots, images, soloIndices, analyses, prefNoFace); if (a.size < slots.length) return;
-    a = swapFacesOffCutLines(a, slots, cellWidth!, canvasH, images, analyses);
-    debug.push('  swap: ' + [...a.entries()].map(([id2,si2]) => `#${id2}@s${si2}:${isFaceOnCutLine(id2, slots[si2], cellWidth!, canvasH, images, analyses)}`).join(' '));
+    debug.push('  assigned: ' + [...a.entries()].map(([id2,si2]) => `#${id2}@s${si2}`).join(' '));
     const si0 = placements.length;
     for (const [idx, si] of a) { debug.push(`  SLOT #${idx} -> s${si}`); const z = zMap ? zMap(si) : 1; placeSlot(idx, slots[si], cellWidth!, canvasH, images, z, placements, rects, analyses); specialPlaced.add(idx); }
     for (let i = si0; i < placements.length; i++) {

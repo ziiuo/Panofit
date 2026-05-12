@@ -51,10 +51,7 @@ export default function UploadPage() {
           const blob = await fetch(ui.objectUrl).then(r => r.blob());
           const reader = new FileReader();
           const base64 = await new Promise<string>((resolve) => { reader.onload = () => resolve((reader.result as string).split(',')[1]); reader.readAsDataURL(blob); });
-          const ctrl = new AbortController();
-          const tmr = setTimeout(() => ctrl.abort(), 8000);
-          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8765'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64 }), signal: ctrl.signal });
-          clearTimeout(tmr);
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8765'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64 }) });
           return resp.json();
         }));
         for (let i = 0; i < analyses.length; i++) {
@@ -69,7 +66,7 @@ export default function UploadPage() {
       const cells = renderCellCanvases(plans, elements, uploadedImages);
       useAppStore.setState({
         imageAnalyses: analyses, canvasPlans: plans, cellCanvases: cells,
-        cellBackgrounds: cells.map(() => '#000000'), isProcessing: false, progress: null,
+        cellBackgrounds: cells.map(() => '#000000'), cellTextOverlays: [], isProcessing: false, progress: null,
       });
       track('generate_done', { imageCount: uploadedImages.length, canvasCount: cells.length, genDuration: Math.round((Date.now() - t0) / 1000), splitOption: splitParts.join('+') });
       setPage('editor');
@@ -101,10 +98,7 @@ export default function UploadPage() {
           const blob = await fetch(ui.objectUrl).then(r => r.blob());
           const reader = new FileReader();
           const base64 = await new Promise<string>((resolve) => { reader.onload = () => resolve((reader.result as string).split(',')[1]); reader.readAsDataURL(blob); });
-          const ctrl = new AbortController();
-          const tmr = setTimeout(() => ctrl.abort(), 8000);
-          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8765'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64 }), signal: ctrl.signal });
-          clearTimeout(tmr);
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8765'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64 }) });
           return resp.json();
         }));
         for (let i = 0; i < analyses.length; i++) {
@@ -118,7 +112,7 @@ export default function UploadPage() {
       const cells = renderCellCanvases(plans, elements, uploadedImages);
       useAppStore.setState({
         imageAnalyses: analyses, canvasPlans: plans, cellCanvases: cells,
-        cellBackgrounds: cells.map(() => '#000000'), isProcessing: false, progress: null,
+        cellBackgrounds: cells.map(() => '#000000'), cellTextOverlays: [], isProcessing: false, progress: null,
       });
       setPage('editor');
     } catch (e: any) {
@@ -163,7 +157,7 @@ export default function UploadPage() {
       <div className="px-4 pt-3 pb-3 flex items-center justify-between glass-bar">
         <button onClick={() => useAppStore.getState().reset()} className="text-sm text-text-secondary glass-btn active:scale-95">取消</button>
         <h1 className="text-base font-semibold text-text">上传素材</h1>
-        <button onClick={handleAddMore} className="text-sm text-text font-medium glass-btn active:scale-95">+ 添加</button>
+        <button onClick={handleAddMore} disabled={uploadedImages.length >= 24} className={`text-sm font-medium glass-btn active:scale-95 ${uploadedImages.length >= 24 ? 'opacity-30 cursor-not-allowed' : 'text-text'}`}>+ 添加</button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">

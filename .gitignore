@@ -12,4 +12,7 @@ __pycache__/
 .mcp.json
 .claude/
 
+.vite/
+imagesorcery-mcp/
+
 # .github workflow is committed

@@ -11,15 +11,14 @@ const BG_COLORS = [
 ];
 
 const FONT_OPTIONS = [
-  'PingFang SC, Microsoft YaHei, sans-serif',
-  'SimHei, PingFang SC, sans-serif',
-  'SimSun, STSong, serif',
-  'KaiTi, STKaiti, serif',
-  'FangSong, STFangsong, serif',
+  'PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif',
+  'Heiti SC, STHeiti, Noto Sans CJK SC, sans-serif',
+  'Songti SC, STSong, Noto Serif CJK SC, SimSun, serif',
+  'Kaiti SC, STKaiti, KaiTi, serif',
   'Arial, Helvetica, sans-serif',
   'Georgia, Times New Roman, serif',
 ];
-const FONT_LABELS = ['苹方', '黑体', '宋体', '楷体', '仿宋', 'Arial', 'Georgia'];
+const FONT_LABELS = ['苹方', '黑体', '宋体', '楷体', 'Arial', 'Georgia'];
 
 function isLightBg(hex: string): boolean {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -46,6 +45,7 @@ export default function EditorPage() {
   const redoStack = useAppStore((s) => s.redoStack);
   const setPage = useAppStore((s) => s.setPage);
   const [showBgPicker, setShowBgPicker] = useState(false);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [textPanelMode, setTextPanelMode] = useState<'main' | 'edit' | null>(null);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [textCellIndex, setTextCellIndex] = useState(0);
@@ -161,10 +161,20 @@ export default function EditorPage() {
 
   // Text actions
   const handleNewText = useCallback(() => {
-    const id = addTextOverlay(textCellIndex);
+    const imgs = scrollRef.current?.querySelectorAll('.cell-img') as NodeListOf<HTMLImageElement> | undefined;
+    let ci = 0;
+    if (imgs) {
+      const vw = window.innerWidth, cx = vw / 2;
+      for (let i = 0; i < imgs.length; i++) {
+        const r = imgs[i].getBoundingClientRect();
+        if (r.left <= cx && r.right >= cx) { ci = i; break; }
+      }
+    }
+    const id = addTextOverlay(ci);
+    setTextCellIndex(ci);
     setEditingTextId(id);
     setTextPanelMode('edit');
-  }, [textCellIndex, addTextOverlay]);
+  }, [addTextOverlay]);
 
   const handleEditText = useCallback(() => {
     if (!editingTextId) {
@@ -215,27 +225,22 @@ export default function EditorPage() {
     let cx: number, cy: number;
     if ('touches' in e) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
     else { cx = e.clientX; cy = e.clientY; }
-    draggingRef.current = { id: ovId, cellIdx, startX: cx, startY: cy, startOx: ov.x, startOy: ov.y };
+    const startOx = ov.x, startOy = ov.y;
 
     const onMove = (me: MouseEvent | TouchEvent) => {
-      if (!draggingRef.current) return;
       let mx: number, my: number;
       if ('touches' in me) { mx = me.touches[0].clientX; my = me.touches[0].clientY; }
       else { mx = me.clientX; my = me.clientY; }
       const imgs = document.querySelectorAll('.cell-img');
-      const img = imgs[draggingRef.current.cellIdx] as HTMLImageElement;
+      const img = imgs[cellIdx] as HTMLImageElement;
       if (!img) return;
       const rect = img.getBoundingClientRect();
-      const dx = (mx - draggingRef.current.startX) / rect.width;
-      const dy = (my - draggingRef.current.startY) / rect.height;
-      updateTextOverlay(cellIdx, ovId, {
-        x: Math.max(0, Math.min(1, draggingRef.current.startOx + dx)),
-        y: Math.max(0, Math.min(1, draggingRef.current.startOy + dy)),
-      });
+      const dx = (mx - cx) / rect.width;
+      const dy = (my - cy) / rect.height;
+      updateTextOverlay(cellIdx, ovId, { x: startOx + dx, y: startOy + dy });
     };
 
     const onUp = () => {
-      draggingRef.current = null;
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
       window.removeEventListener('touchmove', onMove);
@@ -258,7 +263,7 @@ export default function EditorPage() {
     <div className="h-full flex flex-col">
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 bg-[#1a1a1a]">
-        <button onClick={() => setPage('upload')} className="text-text text-sm font-medium glass-btn active:scale-95">← 返回</button>
+        <button onClick={() => setShowBackConfirm(true)} className="text-text text-sm font-medium glass-btn active:scale-95">← 返回</button>
         <div className="flex items-center gap-2">
           <button onClick={() => setPage('preview')} className="text-text text-sm font-medium glass-btn active:scale-95">预览</button>
           <button onClick={handleExport} className="text-text text-sm font-medium glass-btn active:scale-95">下载</button>
@@ -287,29 +292,24 @@ export default function EditorPage() {
               <div className="absolute bottom-2 right-2 bg-black/40 text-white text-[10px] px-1.5 py-0.5 rounded">{i + 1}/{n}</div>
             </div>
           ))}
-        </div>
-
-        {/* Global text overlay layer — z-10 above all cells */}
-        <div className="absolute inset-0 pointer-events-none z-10" style={{ transform: `scale(${transform.scale})`, transformOrigin: 'center center' }}>
-          <div className="relative w-full h-full" onClick={() => { setEditingTextId(null); setTextPanelMode(null); }}>
+          {/* Global text overlay — inside flex container, z-10 */}
+          <div className="absolute inset-0 pointer-events-none z-10" onClick={() => { setEditingTextId(null); setTextPanelMode(null); }}>
             {cellTextOverlays.map((ovs, i) => (ovs ?? []).map((ov) => {
               const isLocked = ov.id === editingTextId && i === textCellIndex;
               const imgs = scrollRef.current?.querySelectorAll('.cell-img') as NodeListOf<HTMLImageElement> | undefined;
               const cellImg = imgs?.[i];
               const cellLeft = cellImg ? cellImg.offsetLeft + (cellImg.parentElement?.offsetLeft ?? 0) : i * 370;
-              const cellTop = cellImg ? cellImg.offsetTop + (cellImg.parentElement?.offsetTop ?? 0) : 20;
+              const cellTop = cellImg ? cellImg.offsetTop + (cellImg.parentElement?.offsetTop ?? 0) : 24;
               const cellW = cellImg?.offsetWidth ?? 358;
               const cellH = cellImg?.offsetHeight ?? 358;
-              const left = cellLeft + ov.x * cellW;
-              const top = cellTop + ov.y * cellH;
               return (
-                <div key={ov.id} className="absolute group pointer-events-auto" style={{ left: `${left}px`, top: `${top}px`, textAlign: ov.textAlign }}>
+                <div key={ov.id} className="absolute group pointer-events-auto" style={{ left: `${cellLeft + ov.x * cellW}px`, top: `${cellTop + ov.y * cellH}px`, textAlign: ov.textAlign }}>
                   <div className="inline-block cursor-grab active:cursor-grabbing"
                     onMouseDown={(e) => handleDragStart(e, ov.id, i)}
                     onTouchStart={(e) => { if (e.touches.length === 1) handleDragStart(e, ov.id, i); }}
                     onClick={(e2) => { e2.stopPropagation(); selectOverlay(ov.id, i); }}>
                     {ov.text.trim() ? (
-                      <span style={{ fontFamily: ov.fontFamily, fontSize: `${ov.fontSize * transform.scale}px`, color: ov.color, fontWeight: ov.fontWeight, fontStyle: ov.fontStyle, textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{ov.text}</span>
+                      <span style={{ fontFamily: ov.fontFamily, fontSize: `${ov.fontSize}px`, color: ov.color, fontWeight: ov.fontWeight, fontStyle: ov.fontStyle, whiteSpace: 'nowrap', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{ov.text}</span>
                     ) : (
                       <span className="text-white/60 text-xs bg-white/10 rounded px-1.5 py-0.5">点击输入文字</span>
                     )}
@@ -329,21 +329,21 @@ export default function EditorPage() {
         </div>
       </div>
 
+      {/* Undo/Redo — outside black bar */}
+      <div className="flex items-center gap-2 px-4 py-1">
+        <button onClick={undo} disabled={undoStack.length === 0} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 disabled:opacity-25 transition-all" title="撤销">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 10h10a5 5 0 015 5v2M3 10l4-4M3 10l4 4" /></svg>
+        </button>
+        <button onClick={redo} disabled={redoStack.length === 0} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 disabled:opacity-25 transition-all" title="重做">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M21 10H11a5 5 0 00-5 5v2M21 10l-4-4M21 10l-4 4" /></svg>
+        </button>
+      </div>
+
       {/* Bottom menu bar */}
       <div className="bg-black flex-shrink-0">
-        {/* Undo/Redo */}
-        <div className="flex items-center gap-2 px-4 pt-2">
-          <button onClick={undo} disabled={undoStack.length === 0} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 disabled:opacity-25 transition-all" title="撤销">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 10h10a5 5 0 015 5v2M3 10l4-4M3 10l4 4" /></svg>
-          </button>
-          <button onClick={redo} disabled={redoStack.length === 0} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 disabled:opacity-25 transition-all" title="重做">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M21 10H11a5 5 0 00-5 5v2M21 10l-4-4M21 10l-4 4" /></svg>
-          </button>
-        </div>
-
         {/* Background picker */}
         {showBgPicker && (
-          <div className="px-4 pt-2 pb-2 animate-slide-up border-t border-border/50 mt-1">
+          <div className="px-4 pt-2 pb-2 animate-slide-up mt-1">
             <div className="flex flex-wrap gap-2">
               {BG_COLORS.map((color) => (
                 <button key={color} onClick={() => applyBgToAll(color)} className={`w-8 h-8 rounded-full border-2 transition-all active:scale-90 hover:scale-110 ${currentBg === color ? 'border-primary scale-110 ring-2 ring-primary/30' : 'border-gray-200'}`} style={{ backgroundColor: color }} title={color} />
@@ -354,7 +354,7 @@ export default function EditorPage() {
 
         {/* Text main menu */}
         {textPanelMode === 'main' && (
-          <div className="px-4 pt-2 pb-2 animate-slide-up border-t border-border/50 mt-1">
+          <div className="px-4 pt-2 pb-2 animate-slide-up  mt-1">
             <div className="flex justify-between gap-1">
               <button onClick={handleNewText} className="flex flex-col items-center gap-1 active:scale-95 transition-all">
                 <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 5v14M5 12h14" /></svg>
@@ -378,12 +378,12 @@ export default function EditorPage() {
 
         {/* Text edit panel */}
         {textPanelMode === 'edit' && editingOverlay && (
-          <div className="px-4 pt-2 pb-2 animate-slide-up border-t border-border/50 mt-1 space-y-3">
+          <div className="px-4 pt-2 pb-2 animate-slide-up  mt-1 space-y-3">
             <button onClick={() => setTextPanelMode('main')} className="text-xs text-white/60 hover:text-white flex items-center gap-1">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
               返回
             </button>
-            <input type="text" placeholder="输入文字..." value={editingOverlay.text} onChange={(e) => updateTextOverlay(textCellIndex, editingTextId, { text: e.target.value })} className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary" autoFocus />
+            <textarea placeholder="输入文字..." value={editingOverlay.text} onChange={(e) => updateTextOverlay(textCellIndex, editingTextId, { text: e.target.value })} className="w-full px-3 py-2 text-sm border border-white/10 bg-white/5 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-primary resize-none" rows={3} autoFocus />
             <div className="flex gap-2 border-b border-border">
               <button onClick={() => setEditSubTab('font')} className={`text-xs font-medium px-3 py-1.5 border-b-2 transition-all ${editSubTab === 'font' ? 'text-primary border-primary' : 'text-text-secondary border-transparent'}`}>字体</button>
               <button onClick={() => setEditSubTab('style')} className={`text-xs font-medium px-3 py-1.5 border-b-2 transition-all ${editSubTab === 'style' ? 'text-primary border-primary' : 'text-text-secondary border-transparent'}`}>样式</button>
@@ -446,6 +446,19 @@ export default function EditorPage() {
 
         <div className="h-4 sm:h-2" />
       </div>
+
+      {/* Back confirm modal */}
+      {showBackConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowBackConfirm(false)}>
+          <div className="glass-strong max-w-xs w-full p-5 shadow-xl animate-[slideUp_0.2s_ease-out]" onClick={e => e.stopPropagation()}>
+            <p className="text-sm text-text text-center mb-4">确认放弃当前精修的图片？</p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowBackConfirm(false)} className="flex-1 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium active:scale-[0.98]">取消</button>
+              <button onClick={() => { setShowBackConfirm(false); setPage('upload'); }} className="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-medium active:scale-[0.98]">放弃</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -14,7 +14,6 @@ export async function exportAll(
     const canvas = canvases[i];
     if (!canvas) continue;
     await exportCanvas(canvas, generateFilename(i, canvases.length), quality);
-    // Brief pause between exports to allow GC
-    await new Promise((r) => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 600));
   }
 }

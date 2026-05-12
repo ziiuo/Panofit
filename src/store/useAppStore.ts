@@ -49,7 +49,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addImages: async (files) => {
     const existing = get().uploadedImages;
+    if (existing.length >= 24) { alert('最多上传 24 张照片'); return; }
     const remaining = 24 - existing.length;
+    if (files.length > remaining) alert(`最多还能上传 ${remaining} 张，已自动截取`);
     const toAdd = files.slice(0, remaining);
 
     const newImages: UploadedImage[] = [];

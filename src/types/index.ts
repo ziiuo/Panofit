@@ -126,6 +126,7 @@ export interface TextOverlay {
   fontWeight: 'normal' | 'bold';
   fontStyle: 'normal' | 'italic';
   textAlign: 'left' | 'center' | 'right';
+  lineHeight: number;       // e.g. 1.5
 }
 
 export interface AppState {

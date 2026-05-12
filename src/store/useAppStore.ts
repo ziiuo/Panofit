@@ -112,7 +112,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const overlay: TextOverlay = {
       id, text: '', x: 0.1, y: 0.3, fontSize: 36,
       fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif',
-      color: '#FFFFFF', fontWeight: 'normal', fontStyle: 'normal', textAlign: 'left',
+      color: '#FFFFFF', fontWeight: 'normal', fontStyle: 'normal', textAlign: 'left', lineHeight: 1.5,
     };
     overlays[cellIndex] = [...overlays[cellIndex], overlay];
     const undo = [...get().undoStack];
@@ -222,7 +222,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     } else if (action.type === 'text-add') {
       const overlays = [...cell];
       while (overlays.length <= action.cellIndex) overlays.push([]);
-      const ov = { id: action.overlayId, text: '', x: 0.1, y: 0.3, fontSize: 36, fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif', color: '#FFFFFF', fontWeight: 'normal' as const, fontStyle: 'normal' as const, textAlign: 'left' as const };
+      const ov = { id: action.overlayId, text: '', x: 0.1, y: 0.3, fontSize: 36, fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif', color: '#FFFFFF', fontWeight: 'normal' as const, fontStyle: 'normal' as const, textAlign: 'left' as const, lineHeight: 1.5 };
       overlays[action.cellIndex] = [...overlays[action.cellIndex], ov];
       set({ cellTextOverlays: overlays, undoStack: undo, redoStack: redo });
     } else if (action.type === 'text-remove') {

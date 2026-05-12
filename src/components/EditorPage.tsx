@@ -11,14 +11,9 @@ const BG_COLORS = [
 ];
 
 const FONT_OPTIONS = [
-  'PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif',
-  'STHeiti, Heiti SC, Noto Sans CJK SC, sans-serif',
-  'STSong, Songti SC, SimSun, Noto Serif CJK SC, serif',
-  'STKaiti, Kaiti SC, KaiTi, serif',
-  'Arial, Helvetica, sans-serif',
-  'Georgia, Times New Roman, serif',
+  '-apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif',
 ];
-const FONT_LABELS = ['苹方', '黑体', '宋体', '楷体', 'Arial', 'Georgia'];
+const FONT_LABELS = ['默认'];
 
 function isLightBg(hex: string): boolean {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -310,7 +305,7 @@ export default function EditorPage() {
                     onTouchStart={(e) => { if (e.touches.length === 1) handleDragStart(e, ov.id, i); }}
                     onClick={(e2) => { e2.stopPropagation(); selectOverlay(ov.id, i); }}>
                     {ov.text.trim() ? (
-                      <span style={{ fontFamily: ov.fontFamily, fontSize: `${ov.fontSize}px`, color: ov.color, fontWeight: ov.fontWeight, fontStyle: ov.fontStyle, whiteSpace: 'pre', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{ov.text}</span>
+                      <span style={{ fontFamily: ov.fontFamily, fontSize: `${ov.fontSize}px`, color: ov.color, fontWeight: ov.fontWeight, fontStyle: ov.fontStyle, whiteSpace: 'pre', lineHeight: ov.lineHeight, textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{ov.text}</span>
                     ) : (
                       <span className="text-white/60 text-xs bg-white/10 rounded px-1.5 py-0.5 whitespace-nowrap">点击输入文字</span>
                     )}
@@ -390,13 +385,7 @@ export default function EditorPage() {
               <button onClick={() => setEditSubTab('style')} className={`text-xs font-medium px-3 py-1.5 border-b-2 transition-all ${editSubTab === 'style' ? 'text-primary border-primary' : 'text-text-secondary border-transparent'}`}>样式</button>
             </div>
             {editSubTab === 'font' && (
-              <div className="grid grid-cols-3 gap-2">
-                {FONT_OPTIONS.map((font, i) => (
-                  <button key={font} onClick={() => updateTextOverlay(textCellIndex, editingTextId, { fontFamily: font })} className={`p-3 rounded-xl border transition-all text-center ${editingOverlay.fontFamily === font ? 'border-primary bg-primary/5 ring-1 ring-primary/30' : 'border-border hover:bg-gray-50'}`} style={{ fontFamily: font }}>
-                    <span className="text-sm">{FONT_LABELS[i]}</span>
-                  </button>
-                ))}
-              </div>
+              <div className="text-xs text-white/50 text-center py-3">使用系统默认字体</div>
             )}
             {editSubTab === 'style' && (
               <div className="space-y-3">
@@ -406,6 +395,14 @@ export default function EditorPage() {
                     <button onClick={() => updateTextOverlay(textCellIndex, editingTextId, { fontSize: Math.max(8, editingOverlay.fontSize - 4) })} className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-sm hover:bg-gray-50">−</button>
                     <span className="text-base font-medium min-w-[2rem] text-center">{editingOverlay.fontSize}</span>
                     <button onClick={() => updateTextOverlay(textCellIndex, editingTextId, { fontSize: Math.min(120, editingOverlay.fontSize + 4) })} className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-sm hover:bg-gray-50">+</button>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-text-secondary mb-1.5 block">行间距</span>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => updateTextOverlay(textCellIndex, editingTextId, { lineHeight: Math.max(0.8, (editingOverlay.lineHeight || 1.5) - 0.1) })} className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-sm hover:bg-gray-50">−</button>
+                    <span className="text-base font-medium min-w-[2rem] text-center">{(editingOverlay.lineHeight || 1.5).toFixed(1)}</span>
+                    <button onClick={() => updateTextOverlay(textCellIndex, editingTextId, { lineHeight: Math.min(3, (editingOverlay.lineHeight || 1.5) + 0.1) })} className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-sm hover:bg-gray-50">+</button>
                   </div>
                 </div>
                 <div>

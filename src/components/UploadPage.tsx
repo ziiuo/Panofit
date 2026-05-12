@@ -5,6 +5,20 @@ import type { SplitOption } from '../engine/splitter';
 import SplitModal from './SplitModal';
 import { track } from '../utils/analytics';
 
+function ProgressBar() {
+  const p = useAppStore(s => s.progress);
+  if (!p || p.total < 1) return null;
+  const pct = Math.round((p.current / p.total) * 100);
+  return (
+    <div className="mb-2">
+      <div className="flex justify-between text-[10px] text-white/60 mb-1"><span>{p.message}</span><span>{pct}%</span></div>
+      <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+        <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 export default function UploadPage() {
   const uploadedImages = useAppStore((s) => s.uploadedImages);
   const collageCount = useAppStore((s) => s.collageCount);
@@ -35,27 +49,36 @@ export default function UploadPage() {
       const { generatePlansFromSplit } = await import('../engine/layout');
       const { loadImageElements, renderCellCanvases } = await import('../engine/renderer');
 
+      const N = uploadedImages.length, totalSteps = N * 3 + 2;
+      let step = 0;
+      const upd = (msg: string) => useAppStore.setState({ progress: { phase: 'generating', current: ++step, total: totalSteps, message: msg } });
+
       const imgs: HTMLImageElement[] = [];
       for (const ui of uploadedImages) {
         const el = new Image(); el.src = ui.objectUrl;
         await new Promise<void>(r => { el.onload = () => r(); });
         imgs.push(el);
+        upd('加载图片');
       }
       const analyses = [...useAppStore.getState().imageAnalyses];
-      for (let i = 0; i < uploadedImages.length; i++) {
+      for (let i = 0; i < N; i++) {
         if (!analyses[i]) analyses[i] = await analyzeImage(imgs[i], i);
+        upd('智能分析');
       }
 
       try {
-        const faceResults = await Promise.all(uploadedImages.map(async (ui) => {
+        const faceResults: any[] = [];
+        for (let i = 0; i < N; i++) {
+          const ui = uploadedImages[i];
           const blob = await fetch(ui.objectUrl).then(r => r.blob());
           const reader = new FileReader();
           const base64 = await new Promise<string>((resolve) => { reader.onload = () => resolve((reader.result as string).split(',')[1]); reader.readAsDataURL(blob); });
           const ctrl = new AbortController();
           setTimeout(() => ctrl.abort(), 60000);
           const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8765'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64 }), signal: ctrl.signal });
-          return resp.json();
-        }));
+          faceResults.push(await resp.json());
+          upd('人脸检测');
+        }
         for (let i = 0; i < analyses.length; i++) {
           if (faceResults[i]?.face && faceResults[i]?.faceRegion) {
             analyses[i] = { ...analyses[i], faceRegion: faceResults[i].faceRegion };
@@ -63,8 +86,10 @@ export default function UploadPage() {
         }
       } catch (e) { /* face server unavailable */ }
 
+      upd('生成排版');
       const plans = generatePlansFromSplit(uploadedImages, analyses, useAppStore.getState().aspectRatio, splitParts, useAppStore.getState().layoutMode);
       const elements = await loadImageElements(uploadedImages);
+      upd('渲染图片');
       const cells = renderCellCanvases(plans, elements, uploadedImages);
       useAppStore.setState({
         imageAnalyses: analyses, canvasPlans: plans, cellCanvases: cells,
@@ -192,6 +217,9 @@ export default function UploadPage() {
       </div>
 
       <div className="glass px-4 py-3">
+        {generating && (
+          <ProgressBar />
+        )}
         <button
           onClick={handleGenerate}
           disabled={uploadedImages.length < 3 || generating || showSplitModal}

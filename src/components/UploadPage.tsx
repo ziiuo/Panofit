@@ -51,7 +51,10 @@ export default function UploadPage() {
           const blob = await fetch(ui.objectUrl).then(r => r.blob());
           const reader = new FileReader();
           const base64 = await new Promise<string>((resolve) => { reader.onload = () => resolve((reader.result as string).split(',')[1]); reader.readAsDataURL(blob); });
-          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8765'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64 }) });
+          const ctrl = new AbortController();
+          const tmr = setTimeout(() => ctrl.abort(), 8000);
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8765'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64 }), signal: ctrl.signal });
+          clearTimeout(tmr);
           return resp.json();
         }));
         for (let i = 0; i < analyses.length; i++) {
@@ -98,7 +101,10 @@ export default function UploadPage() {
           const blob = await fetch(ui.objectUrl).then(r => r.blob());
           const reader = new FileReader();
           const base64 = await new Promise<string>((resolve) => { reader.onload = () => resolve((reader.result as string).split(',')[1]); reader.readAsDataURL(blob); });
-          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8765'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64 }) });
+          const ctrl = new AbortController();
+          const tmr = setTimeout(() => ctrl.abort(), 8000);
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8765'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64 }), signal: ctrl.signal });
+          clearTimeout(tmr);
           return resp.json();
         }));
         for (let i = 0; i < analyses.length; i++) {

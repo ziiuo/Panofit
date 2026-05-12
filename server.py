@@ -60,7 +60,12 @@ def _detect_face(img_bytes):
 try:
     from config_secret import FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_APP_TOKEN, FEISHU_TABLE_ID
 except ImportError:
-    FEISHU_APP_ID = FEISHU_APP_SECRET = FEISHU_APP_TOKEN = FEISHU_TABLE_ID = ""
+    pass  # fall through to env vars
+
+FEISHU_APP_ID = os.environ.get("FEISHU_APP_ID", FEISHU_APP_ID if "FEISHU_APP_ID" in dir() else "")
+FEISHU_APP_SECRET = os.environ.get("FEISHU_APP_SECRET", FEISHU_APP_SECRET if "FEISHU_APP_SECRET" in dir() else "")
+FEISHU_APP_TOKEN = os.environ.get("FEISHU_APP_TOKEN", FEISHU_APP_TOKEN if "FEISHU_APP_TOKEN" in dir() else "")
+FEISHU_TABLE_ID = os.environ.get("FEISHU_TABLE_ID", FEISHU_TABLE_ID if "FEISHU_TABLE_ID" in dir() else "")
 
 _token = None
 _token_expires = 0
